@@ -1,0 +1,18 @@
+{
+  "name": "scripbus",
+  "version": "0.0.1",
+  "description": "Simple wrapper for function calls to installed packages of multiple languages",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MarkusPeitl",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^15.6.1",
+    "@types/typescript": "^2.0.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {}
+}
