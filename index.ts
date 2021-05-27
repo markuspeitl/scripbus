@@ -2,7 +2,9 @@ import process from 'process';
 import fsPromises from 'fs/promises';
 import path from 'path'
 import { Stats } from 'fs';
-import { spawn } from 'child_process';
+import util from 'util';
+import { spawn, exec, SpawnOptionsWithoutStdio } from 'child_process';
+const execute = util.promisify(exec);
 
 async function getBinsOfPath(dir: string): Promise<string[]> {
 
@@ -53,17 +55,37 @@ async function getAllDirsBinaries(directoryPaths: string[]): Promise<string[]>{
     return allBinaries;
 }
 
-function genHandlerFunction(binaryPath: string): any {
+//Disable output processing features, if you know the output to speed up performance
+interface ProcessingOptions {
+    findTable: boolean;
+    findNumbers: boolean;
+    findNumberLists: boolean;
+    findWords: boolean;
+    findWordLists: boolean;
+    findLines: boolean;
+    findPaths: string;
+}
+function setProcessingOptions() {
+    
+}
+
+function genHandlerFunction(binaryPath?: string): any {
     
     const handlerFunction = async (...args: any[]): Promise<any[]> => {
     
-        return new Promise<any[]>((resolve, reject) => {
-            
+        return new Promise<any[]>(async (resolve, reject) => {
 
             console.log("Opening subprocess: " + binaryPath)
             console.log("With args: " + args)
+            const options: SpawnOptionsWithoutStdio = {};
 
-            const spawnedProcess = spawn(binaryPath, args);
+            if (!binaryPath) {
+                binaryPath = args.join(" ");
+                args = [];
+                options.shell = true;
+            }
+
+            const spawnedProcess = spawn(binaryPath, args, options);
             const resultDataPackets: any[] = []
     
             spawnedProcess.stdout.on('data', (data) => {
@@ -94,6 +116,12 @@ function registerBinariesInContext(binaries: string[], context: Record<string, u
     }
 }
 
+function registerDefaultFunctions(context: Record<string, unknown>): void {
+    context[ 'eval' ] = genHandlerFunction();
+    context[ 'call' ] = genHandlerFunction();
+    context[ 'exec' ] = genHandlerFunction();
+}
+
 async function getGlobalPathFunctionsContext(): Promise<Record<string, unknown> | null> {
     const globalContext: any = {}
     const globalPath: string | undefined = process.env.PATH;
@@ -104,6 +132,7 @@ async function getGlobalPathFunctionsContext(): Promise<Record<string, unknown> 
     const pathDirs: string[] = globalPath.split(':');
     const allBinaries: string[] = await getAllDirsBinaries(pathDirs);
     registerBinariesInContext(allBinaries, globalContext);
+    registerDefaultFunctions(globalContext);
     return globalContext;
 }
 
@@ -116,6 +145,8 @@ exportsObj.getGlobalContext()
 .then(async(ctx: any) => {
     await ctx.rnmd("--version");
     await ctx.rnmd("/home/pmarkus/repos/rnmd/notebook/test.md");
+    await ctx.eval("echo 'test'");
+    await ctx.bash("test.sh");
 })
 .catch((error: Error) => {
      console.log(error);

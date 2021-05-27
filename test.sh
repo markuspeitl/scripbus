@@ -1,0 +1,1 @@
+echo "testscript to exec to check relative path"
