@@ -4,6 +4,7 @@ import path from 'path'
 import { Stats } from 'fs';
 import util from 'util';
 import { spawn, exec, SpawnOptionsWithoutStdio } from 'child_process';
+import { ProcessResult } from './models/process-result';
 const execute = util.promisify(exec);
 
 async function getBinsOfPath(dir: string): Promise<string[]> {
@@ -65,7 +66,12 @@ interface ProcessingOptions {
     findLines: boolean;
     findPaths: string;
 }
-function setProcessingOptions() {
+
+let processingOptions: ProcessingOptions | null = null;
+function setProcessingOptions(options:ProcessingOptions) {
+    processingOptions = options;
+}
+function setPostTransformer<OutType>(targetHandlerKey: string, transformer: (processResults: ProcessResult) => OutType): void {
     
 }
 
